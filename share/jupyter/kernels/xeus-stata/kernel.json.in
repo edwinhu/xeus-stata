@@ -1,0 +1,14 @@
+{
+    "display_name": "Stata",
+    "argv": [
+        "@CMAKE_INSTALL_PREFIX@/bin/xstata",
+        "-f",
+        "{connection_file}"
+    ],
+    "language": "stata",
+    "interrupt_mode": "signal",
+    "env": {},
+    "metadata": {
+        "debugger": false
+    }
+}
