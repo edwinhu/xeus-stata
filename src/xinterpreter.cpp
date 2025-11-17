@@ -95,7 +95,7 @@ namespace xeus_stata
                 result["payload"] = nl::json::array();
                 result["user_expressions"] = nl::json::object();
 
-                // Publish output with potential HTML table formatting
+                // Publish output with rich HTML table formatting
                 if (!config.silent && !exec_result.output.empty())
                 {
                     // Check if output looks like a table
