@@ -1,0 +1,18 @@
+{
+  "sysuse_output": [
+    {
+      "type": "stream",
+      "name": "stdout",
+      "text": "(1978 automobile data)"
+    }
+  ],
+  "regression_output": [
+    {
+      "type": "execute_result",
+      "data": {
+        "text/html": "<style>\n.stata-output {\n  font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, 'DejaVu Sans Mono', Consolas, monospace;\n  font-size: 12px;\n  font-variant-ligatures: none;\n  background-color: #f8f8f8;\n  padding: 10px;\n  border: 1px solid #e0e0e0;\n  border-radius: 3px;\n  overflow-x: auto;\n  margin: 0;\n  line-height: 1.4;\n}\n</style>\n<pre class=\"stata-output\">Source |       SS           df       MS      Number of obs   =        74\n-------------+----------------------------------   F(1, 72)        =     29.42\nModel |   184233937         1   184233937   Prob &gt; F        =    0.0000\nResidual |   450831459        72  6261548.04   R-squared       =    0.2901\n-------------+----------------------------------   Adj R-squared   =    0.2802\nTotal |   635065396        73  8699525.97   Root MSE        =    2502.3\n------------------------------------------------------------------------------\nprice | Coefficient  Std. err.      t    P&gt;|t|     [95% conf. interval]\n-------------+----------------------------------------------------------------\nweight |   2.044063   .3768341     5.42   0.000     1.292857    2.795268\n_cons |  -6.707353    1174.43    -0.01   0.995     -2347.89    2334.475\n------------------------------------------------------------------------------</pre>",
+        "text/plain": "Source |       SS           df       MS      Number of obs   =        74\n-------------+----------------------------------   F(1, 72)        =     29.42\nModel |   184233937         1   184233937   Prob > F        =    0.0000\nResidual |   450831459        72  6261548.04   R-squared       =    0.2901\n-------------+----------------------------------   Adj R-squared   =    0.2802\nTotal |   635065396        73  8699525.97   Root MSE        =    2502.3\n------------------------------------------------------------------------------\nprice | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]\n-------------+----------------------------------------------------------------\nweight |   2.044063   .3768341     5.42   0.000     1.292857    2.795268\n_cons |  -6.707353    1174.43    -0.01   0.995     -2347.89    2334.475\n------------------------------------------------------------------------------"
+      }
+    }
+  ]
+}

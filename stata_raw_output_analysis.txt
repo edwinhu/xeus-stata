@@ -1,0 +1,102 @@
+STATA RAW OUTPUT ANALYSIS
+=========================
+
+Commands executed:
+  sysuse auto, clear
+  reg price weight
+
+================================================================================
+RAW TEXT OUTPUT (with $ marking line endings from cat -A):
+================================================================================
+
+. sysuse auto, clear$
+(1978 automobile data)$
+$
+. reg price weight$
+$
+      Source |       SS           df       MS      Number of obs   =        74$
+-------------+----------------------------------   F(1, 72)        =     29.42$
+       Model |   184233937         1   184233937   Prob > F        =    0.0000$
+    Residual |   450831459        72  6261548.04   R-squared       =    0.2901$
+-------------+----------------------------------   Adj R-squared   =    0.2802$
+       Total |   635065396        73  8699525.97   Root MSE        =    2502.3$
+$
+------------------------------------------------------------------------------$
+       price | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]$
+-------------+----------------------------------------------------------------$
+      weight |   2.044063   .3768341     5.42   0.000     1.292857    2.795268$
+       _cons |  -6.707353    1174.43    -0.01   0.995     -2347.89    2334.475$
+------------------------------------------------------------------------------$
+$
+.
+
+================================================================================
+KEY OBSERVATIONS:
+================================================================================
+
+1. LINE ENDINGS: All lines end with \n (0x0a) - standard Unix line endings
+
+2. NO SMCL CODES: When run in batch mode (-b) or with -q flag, Stata produces
+   plain text output WITHOUT SMCL (Stata Markup and Control Language) codes.
+   The hexdump shows only standard ASCII characters.
+
+3. SPACING PATTERNS:
+   - The regression table uses fixed-width spacing
+   - Columns are aligned with spaces (0x20)
+   - Separator lines use hyphens (0x2d) and plus signs (0x2b)
+   - Pipe characters (0x7c / |) separate columns
+
+4. SPECIAL CHARACTERS FOUND:
+   - Standard ASCII only (no SMCL)
+   - One Unicode character: ® (registered trademark) at 0xc2 0xae in header
+   - Em-dash (–) in "BE—Basic Edition" encoded as 0xe2 0x80 0x94
+
+5. TABLE STRUCTURE:
+   - ANOVA table with headers aligned at specific column positions
+   - Coefficient table with similar fixed-width formatting
+   - Horizontal separators made of dashes and plus signs
+
+6. COMMAND ECHO:
+   - Commands are prefixed with ". " (period + space)
+   - Output follows immediately after command echo
+
+================================================================================
+EXACT SPACING MEASUREMENTS (from regression output):
+================================================================================
+
+First line of ANOVA table:
+"      Source |       SS           df       MS      Number of obs   =        74"
+ ^^^^^^ 6 spaces before "Source"
+        ^^^^^^^ 7 spaces between "|" and "SS"
+
+This exact spacing is critical for proper table rendering and must be preserved
+in any output parsing or display system.
+
+================================================================================
+CHARACTER ENCODING:
+================================================================================
+
+- Primary encoding: UTF-8
+- Most content is plain ASCII (0x20-0x7E range)
+- Special characters use multi-byte UTF-8 encoding:
+  - ® = 0xc2 0xae
+  - — (em-dash) = 0xe2 0x80 0x94
+
+================================================================================
+CONCLUSION:
+================================================================================
+
+Stata output in batch/quiet mode is plain text with:
+- Standard Unix line endings (\n)
+- Fixed-width spacing for table alignment
+- NO SMCL codes (those only appear in interactive mode with full terminal)
+- UTF-8 encoding for special characters in header
+- Precise column alignment critical for readability
+
+When implementing output parsing or display, preserve:
+1. Exact spacing (critical for table alignment)
+2. Line endings
+3. Column separators (|, +, -)
+4. UTF-8 encoding
+
+Do NOT expect or parse SMCL codes in batch mode output.

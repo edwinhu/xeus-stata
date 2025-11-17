@@ -245,7 +245,8 @@ namespace xeus_stata
         // Store cleaned output
         result.output = cleaned;
 
-        // Remove empty lines and trim
+        // Remove empty lines and trim trailing whitespace only
+        // IMPORTANT: Keep leading spaces for table alignment!
         std::stringstream ss(result.output);
         std::stringstream output_ss;
         std::string line;
@@ -253,8 +254,7 @@ namespace xeus_stata
 
         while (std::getline(ss, line))
         {
-            // Trim line
-            line.erase(0, line.find_first_not_of(" \t\r"));
+            // Only trim trailing whitespace (keep leading spaces for alignment)
             line.erase(line.find_last_not_of(" \t\r") + 1);
 
             // Skip empty lines

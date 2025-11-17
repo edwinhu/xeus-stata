@@ -1,0 +1,112 @@
+================================================================================
+SIDE-BY-SIDE COMPARISON: Raw Stata vs xeus-stata Kernel Output
+================================================================================
+
+Command: reg price weight
+
+--------------------------------------------------------------------------------
+RAW STATA OUTPUT                     | XEUS-STATA KERNEL OUTPUT
+(from .log file)                     | (text/plain MIME type)
+--------------------------------------------------------------------------------
+                                     |
+"      Source |..."                  | "Source |..."
+^     ^                              | ^
+|     |                              | |
+|     +-- Content starts here        | +-- Content starts here (no padding)
+|                                    |
++-- 6 spaces removed                 |
+                                     |
+Line 1 (ANOVA header):               |
+"      Source |       SS     ..."    | "Source |       SS     ..."
+ ^^^^^^                              | (no leading spaces)
+ 6 spaces                            |
+                                     |
+Line 3 (Model):                      |
+"       Model |   184233937  ..."    | "Model |   184233937  ..."
+ ^^^^^^^                             | (no leading spaces)
+ 7 spaces                            |
+                                     |
+Line 4 (Residual):                   |
+"    Residual |   450831459  ..."    | "Residual |   450831459  ..."
+ ^^^^                                | (no leading spaces)
+ 4 spaces                            |
+                                     |
+Line 6 (Total):                      |
+"       Total |   635065396  ..."    | "Total |   635065396  ..."
+ ^^^^^^^                             | (no leading spaces)
+ 7 spaces                            |
+                                     |
+Line 7 (empty line):                 |
+""                                   | (LINE REMOVED - empty lines skipped)
+                                     |
+Line 8 (separator):                  |
+"---------------------------..."      | "------------------------..."
+(same on both sides)                 | (same on both sides)
+                                     |
+Line 9 (price header):               |
+"       price | Coefficient ..."     | "price | Coefficient ..."
+ ^^^^^^^                             | (no leading spaces)
+ 7 spaces                            |
+                                     |
+Line 11 (weight):                    |
+"      weight |   2.044063 ..."      | "weight |   2.044063 ..."
+ ^^^^^^                              | (no leading spaces)
+ 6 spaces                            |
+                                     |
+Line 12 (_cons):                     |
+"       _cons |  -6.707353 ..."      | "_cons |  -6.707353 ..."
+ ^^^^^^^                             | (no leading spaces)
+ 7 spaces                            |
+                                     |
+--------------------------------------------------------------------------------
+
+SUMMARY OF DIFFERENCES:
+1. All leading spaces/tabs removed from each line (left-trim)
+2. Empty lines removed entirely
+3. All column content and internal spacing preserved
+4. Right-side trailing whitespace also trimmed
+
+RESULT:
+- Stata output: 13 lines (includes empty line)
+- Kernel output: 12 lines (empty line removed)
+
+IMPACT ON ALIGNMENT:
+The table remains properly aligned because:
+- The pipe characters (|) serve as alignment anchors
+- Internal spacing between columns is preserved
+- Only external left-padding is removed
+- Column widths remain consistent
+
+VIEWING IN MONOSPACE FONT:
+Both outputs render correctly in monospace fonts, but the kernel output
+is left-aligned while Stata's original output has center-like indentation.
+
+================================================================================
+CHARACTER-BY-CHARACTER EXAMPLE (First Line)
+================================================================================
+
+STATA OUTPUT:
+Position:  0   1   2   3   4   5   6   7   8...
+Chars:    ' ' ' ' ' ' ' ' ' ' ' ' 'S' 'o' 'u'...
+          \_____6 spaces_____/
+
+KERNEL OUTPUT:
+Position:  0   1   2   3   4   5   6   7   8...
+Chars:    'S' 'o' 'u' 'r' 'c' 'e' ' ' '|' ' '...
+
+Note: No leading spaces in kernel output.
+
+================================================================================
+CODE RESPONSIBLE FOR TRIMMING
+================================================================================
+
+File: /home/eh2889/projects/xeus-stata/src/stata_parser.cpp
+Function: parse_execution_output()
+Line: 257
+
+    line.erase(0, line.find_first_not_of(" \t\r"));  // LEFT TRIM
+
+This line removes all leading whitespace (spaces, tabs, carriage returns)
+from each line of Stata output.
+
+================================================================================
