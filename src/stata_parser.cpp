@@ -61,6 +61,122 @@ namespace xeus_stata
         return graph_files;
     }
 
+    bool is_stata_table(const std::string& output)
+    {
+        if (output.empty())
+        {
+            return false;
+        }
+
+        // Count table indicators
+        int dash_lines = 0;
+        int pipe_lines = 0;
+        int multi_space_lines = 0;
+        int total_lines = 0;
+
+        // Check for common table keywords
+        bool has_table_keywords = false;
+        std::vector<std::string> keywords = {
+            "Variable", "Obs", "Mean", "Std. Dev.", "Std. Err.",
+            "Coef.", "P>|t|", "P>|z|", "[95% Conf. Interval]",
+            "Min", "Max", "Sum", "Variance", "Skewness", "Kurtosis",
+            "Number of obs", "F(", "Prob > F", "R-squared",
+            "Adj R-squared", "Root MSE"
+        };
+
+        for (const auto& keyword : keywords)
+        {
+            if (output.find(keyword) != std::string::npos)
+            {
+                has_table_keywords = true;
+                break;
+            }
+        }
+
+        // Parse lines to detect table structure
+        std::stringstream ss(output);
+        std::string line;
+
+        while (std::getline(ss, line))
+        {
+            total_lines++;
+
+            // Check for lines with multiple dashes (table borders)
+            if (line.find("----") != std::string::npos ||
+                line.find("━━━━") != std::string::npos)
+            {
+                dash_lines++;
+            }
+
+            // Check for lines with pipes (table cells)
+            if (line.find("|") != std::string::npos)
+            {
+                pipe_lines++;
+            }
+
+            // Check for lines with multiple consecutive spaces (column alignment)
+            std::regex multi_space("  +");
+            if (std::regex_search(line, multi_space))
+            {
+                multi_space_lines++;
+            }
+        }
+
+        // Conservative detection: require multiple indicators
+        bool has_structure = (dash_lines >= 1 || pipe_lines >= 2);
+        bool has_alignment = (multi_space_lines >= 3);
+
+        return (has_table_keywords && (has_structure || has_alignment)) ||
+               (dash_lines >= 2 && multi_space_lines >= 3);
+    }
+
+    std::string format_as_html_table(const std::string& output)
+    {
+        // Simple approach: wrap in <pre> with CSS styling
+        std::stringstream html;
+
+        html << "<style>\n";
+        html << ".stata-output {\n";
+        html << "  font-family: 'Courier New', Courier, monospace;\n";
+        html << "  font-size: 12px;\n";
+        html << "  background-color: #f5f5f5;\n";
+        html << "  padding: 10px;\n";
+        html << "  border: 1px solid #ddd;\n";
+        html << "  border-radius: 4px;\n";
+        html << "  overflow-x: auto;\n";
+        html << "  white-space: pre;\n";
+        html << "  line-height: 1.4;\n";
+        html << "}\n";
+        html << "</style>\n";
+        html << "<div class=\"stata-output\">";
+
+        // Escape HTML special characters
+        std::string escaped = output;
+        size_t pos = 0;
+        while ((pos = escaped.find("&", pos)) != std::string::npos)
+        {
+            escaped.replace(pos, 1, "&amp;");
+            pos += 5;
+        }
+        pos = 0;
+        while ((pos = escaped.find("<", pos)) != std::string::npos)
+        {
+            escaped.replace(pos, 1, "&lt;");
+            pos += 4;
+        }
+        pos = 0;
+        while ((pos = escaped.find(">", pos)) != std::string::npos)
+        {
+            escaped.replace(pos, 1, "&gt;");
+            pos += 4;
+        }
+
+        html << escaped;
+        html << "</div>";
+
+        return html.str();
+    }
+
     execution_result parse_execution_output(const std::string& output)
     {
         execution_result result;

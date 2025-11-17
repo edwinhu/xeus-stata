@@ -4,6 +4,7 @@
 #include "xeus-stata/inspection.hpp"
 #include "xeus-stata/xeus_stata_config.hpp"
 #include "xeus-stata/base64.hpp"
+#include "xeus-stata/stata_parser.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -94,10 +95,28 @@ namespace xeus_stata
                 result["payload"] = nl::json::array();
                 result["user_expressions"] = nl::json::object();
 
-                // Publish output
+                // Publish output with potential HTML table formatting
                 if (!config.silent && !exec_result.output.empty())
                 {
-                    publish_stream("stdout", exec_result.output);
+                    // Check if output looks like a table
+                    if (is_stata_table(exec_result.output))
+                    {
+                        // Create MIME bundle with both text/plain and text/html
+                        nl::json display_data;
+                        display_data["text/plain"] = exec_result.output;
+                        display_data["text/html"] = format_as_html_table(exec_result.output);
+
+                        publish_execution_result(
+                            execution_counter,
+                            std::move(display_data),
+                            nl::json::object()
+                        );
+                    }
+                    else
+                    {
+                        // Regular text output
+                        publish_stream("stdout", exec_result.output);
+                    }
                 }
 
                 // Handle graphs

@@ -22,6 +22,12 @@ namespace xeus_stata
     // Extract graph files from output
     std::vector<std::string> extract_graph_files(const std::string& output);
 
+    // Check if output looks like a Stata table
+    bool is_stata_table(const std::string& output);
+
+    // Format output as HTML table
+    std::string format_as_html_table(const std::string& output);
+
 } // namespace xeus_stata
 
 #endif // XEUS_STATA_PARSER_HPP
