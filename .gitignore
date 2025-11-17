@@ -3,6 +3,9 @@ build/
 build-*/
 cmake-build-*/
 
+# Pixi package manager
+.pixi/
+
 # IDE files
 .vscode/
 .idea/

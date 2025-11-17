@@ -99,10 +99,11 @@ xeus-stata is currently in **early development**. Current status:
 
 - [x] Basic project structure
 - [x] Console mode Stata interface (Linux/macOS)
+- [x] Graph display integration (SVG/PNG)
+- [x] HTML table output formatting
 - [ ] Windows console mode support
 - [ ] Complete code completion
 - [ ] Complete code inspection
-- [ ] Graph display integration
 - [ ] Comprehensive testing
 - [ ] Documentation
 
