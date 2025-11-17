@@ -48,6 +48,7 @@ set(XEUS_STATA_SRC
     src/stata_parser.cpp
     src/completion.cpp
     src/inspection.cpp
+    src/base64.cpp
 )
 
 set(XEUS_STATA_HEADERS
@@ -57,6 +58,7 @@ set(XEUS_STATA_HEADERS
     include/xeus-stata/stata_parser.hpp
     include/xeus-stata/completion.hpp
     include/xeus-stata/inspection.hpp
+    include/xeus-stata/base64.hpp
 )
 
 # Executable

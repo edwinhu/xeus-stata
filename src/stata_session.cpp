@@ -7,6 +7,9 @@
 #include <cstdlib>
 #include <cstring>
 #include <stdexcept>
+#include <fstream>
+#include <random>
+#include <sys/stat.h>
 
 #if defined(XEUS_STATA_PLATFORM_LINUX) || defined(XEUS_STATA_PLATFORM_MACOS)
     #include <unistd.h>
@@ -130,8 +133,21 @@ namespace xeus_stata
             // Generate unique marker for detecting command completion
             std::string marker = generate_execution_marker();
 
-            // Wrap code with marker
-            std::string wrapped_code = code + "\ndisplay \"__MARKER__" + marker + "__\"";
+            // Generate temp file for potential graph export
+            std::string temp_graph = generate_temp_filename(".png");
+
+            // Make sure file doesn't exist before we start
+            unlink(temp_graph.c_str());
+
+            // Wrap code with automatic graph export and marker
+            // Check if a graph exists, export it, then drop all graphs to prevent re-export
+            std::string wrapped_code = code + "\n";
+            wrapped_code += "quietly capture graph describe Graph\n";
+            wrapped_code += "if (_rc == 0) {\n";
+            wrapped_code += "  quietly graph export \"" + temp_graph + "\", replace\n";
+            wrapped_code += "}\n";
+            wrapped_code += "quietly graph drop _all\n";
+            wrapped_code += "display \"__MARKER__" + marker + "__\"";
 
             // Write command
             write_command(wrapped_code);
@@ -140,7 +156,17 @@ namespace xeus_stata
             std::string output = read_until_marker("__MARKER__" + marker + "__", 30000); // 30 second timeout
 
             // Parse the output
-            return parse_execution_output(output);
+            execution_result result = parse_execution_output(output);
+
+            // Check if temp graph file was created (it should not exist before, only after)
+            struct stat buffer;
+            if (stat(temp_graph.c_str(), &buffer) == 0 && buffer.st_size > 0)
+            {
+                // File exists and has content, add to result
+                result.graph_files.push_back(temp_graph);
+            }
+
+            return result;
         }
 
         std::string get_version()
@@ -223,6 +249,31 @@ namespace xeus_stata
         }
 
     private:
+        std::string generate_temp_filename(const std::string& extension)
+        {
+            // Generate unique temp filename
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_int_distribution<> dis(0, 999999);
+
+            std::string temp_dir = "/tmp";
+            std::string filename;
+
+            do {
+                std::stringstream ss;
+                ss << temp_dir << "/xeus_stata_graph_" << dis(gen) << extension;
+                filename = ss.str();
+
+                // Check if file exists
+                struct stat buffer;
+                if (stat(filename.c_str(), &buffer) != 0) {
+                    break; // File doesn't exist, we can use this name
+                }
+            } while (true);
+
+            return filename;
+        }
+
         void write_command(const std::string& command)
         {
 #if defined(XEUS_STATA_PLATFORM_LINUX) || defined(XEUS_STATA_PLATFORM_MACOS)

@@ -3,10 +3,13 @@
 #include "xeus-stata/completion.hpp"
 #include "xeus-stata/inspection.hpp"
 #include "xeus-stata/xeus_stata_config.hpp"
+#include "xeus-stata/base64.hpp"
 
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <vector>
+#include <unistd.h>
 
 namespace xeus_stata
 {
@@ -100,35 +103,53 @@ namespace xeus_stata
                 // Handle graphs
                 for (const auto& graph_file : exec_result.graph_files)
                 {
-                    // Read graph file and publish as display data
+                    // Read graph file as binary and publish as display data
                     std::ifstream file(graph_file, std::ios::binary);
                     if (file)
                     {
-                        std::ostringstream ss;
-                        ss << file.rdbuf();
-                        std::string graph_data = ss.str();
+                        // Read binary data
+                        std::vector<unsigned char> buffer(std::istreambuf_iterator<char>(file), {});
+                        file.close();
 
-                        // Determine MIME type based on extension
-                        std::string mime_type = "image/png";
-                        if (graph_file.find(".svg") != std::string::npos)
+                        if (!buffer.empty())
                         {
-                            mime_type = "image/svg+xml";
-                        }
-                        else if (graph_file.find(".pdf") != std::string::npos)
-                        {
-                            mime_type = "application/pdf";
+                            // Base64 encode the image data
+                            std::string encoded = base64_encode(buffer.data(), buffer.size());
+
+                            // Determine MIME type based on extension
+                            std::string mime_type = "image/png";
+                            if (graph_file.find(".svg") != std::string::npos)
+                            {
+                                mime_type = "image/svg+xml";
+                            }
+                            else if (graph_file.find(".pdf") != std::string::npos)
+                            {
+                                mime_type = "application/pdf";
+                            }
+
+                            // Create display data
+                            nl::json display_data;
+                            display_data[mime_type] = encoded;
+
+                            // Add metadata for PNG images
+                            nl::json metadata = nl::json::object();
+                            if (mime_type == "image/png")
+                            {
+                                metadata["image/png"] = {
+                                    {"width", 600},
+                                    {"height", 400}
+                                };
+                            }
+
+                            publish_execution_result(
+                                execution_counter,
+                                std::move(display_data),
+                                std::move(metadata)
+                            );
                         }
 
-                        // Create display data
-                        nl::json display_data;
-                        display_data[mime_type] = graph_data;
-
-                        nl::json metadata;
-                        publish_execution_result(
-                            execution_counter,
-                            std::move(display_data),
-                            std::move(metadata)
-                        );
+                        // Clean up temp file
+                        unlink(graph_file.c_str());
                     }
                 }
             }

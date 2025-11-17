@@ -85,6 +85,16 @@ namespace xeus_stata
         std::regex quote_pattern("^\"\\s*$", std::regex_constants::multiline);
         cleaned = std::regex_replace(cleaned, quote_pattern, "");
 
+        // Remove graph export wrapper lines
+        std::regex quietly_patterns("^quietly (capture graph describe Graph|graph drop _all|graph export \"[^\"]+\", replace)\\s*$", std::regex_constants::multiline);
+        cleaned = std::regex_replace(cleaned, quietly_patterns, "");
+
+        std::regex if_rc_pattern("^if \\(_rc == 0\\) \\{\\s*$", std::regex_constants::multiline);
+        cleaned = std::regex_replace(cleaned, if_rc_pattern, "");
+
+        std::regex closing_brace_pattern("^\\}\\s*$", std::regex_constants::multiline);
+        cleaned = std::regex_replace(cleaned, closing_brace_pattern, "");
+
         // Check for errors
         int error_code = 0;
         result.is_error = contains_error(cleaned, error_code);
