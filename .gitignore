@@ -6,6 +6,9 @@ cmake-build-*/
 # Pixi package manager
 .pixi/
 
+# Claude Code documentation (session-specific)
+.claude/
+
 # IDE files
 .vscode/
 .idea/
