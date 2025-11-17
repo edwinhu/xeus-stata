@@ -4,6 +4,7 @@
 #include "xeus/xkernel.hpp"
 #include "xeus/xkernel_configuration.hpp"
 #include "xeus-zmq/xserver_zmq.hpp"
+#include "xeus-zmq/xzmq_context.hpp"
 
 #include "xeus-stata/xinterpreter.hpp"
 #include "xeus-stata/xeus_stata_config.hpp"
@@ -61,12 +62,16 @@ int main(int argc, char* argv[])
         // Create interpreter
         auto interpreter = std::make_unique<xeus_stata::interpreter>();
 
+        // Create context
+        auto context = xeus::make_zmq_context();
+
         // Create kernel
         xeus::xkernel kernel(
             config,
             xeus::get_user_name(),
+            std::move(context),
             std::move(interpreter),
-            xeus::make_xserver_zmq
+            xeus::make_xserver_default
         );
 
         // Start kernel

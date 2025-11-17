@@ -37,13 +37,12 @@ namespace xeus_stata
         }
     }
 
-    nl::json interpreter::execute_request_impl(
+    void interpreter::execute_request_impl(
+        xeus::xinterpreter::send_reply_callback cb,
         int execution_counter,
         const std::string& code,
-        bool silent,
-        bool store_history,
-        nl::json user_expressions,
-        bool allow_stdin)
+        xeus::execute_request_config config,
+        nl::json user_expressions)
     {
         nl::json result;
 
@@ -53,7 +52,8 @@ namespace xeus_stata
             result["ename"] = "RuntimeError";
             result["evalue"] = "Stata session not initialized";
             result["traceback"] = nl::json::array({"Stata session not initialized"});
-            return result;
+            cb(std::move(result));
+            return;
         }
 
         try
@@ -78,7 +78,7 @@ namespace xeus_stata
                 result["traceback"] = traceback;
 
                 // Publish error output
-                if (!silent)
+                if (!config.silent)
                 {
                     publish_stream("stderr", exec_result.error_message);
                 }
@@ -92,7 +92,7 @@ namespace xeus_stata
                 result["user_expressions"] = nl::json::object();
 
                 // Publish output
-                if (!silent && !exec_result.output.empty())
+                if (!config.silent && !exec_result.output.empty())
                 {
                     publish_stream("stdout", exec_result.output);
                 }
@@ -140,13 +140,13 @@ namespace xeus_stata
             result["evalue"] = e.what();
             result["traceback"] = nl::json::array({e.what()});
 
-            if (!silent)
+            if (!config.silent)
             {
                 publish_stream("stderr", std::string("Error: ") + e.what());
             }
         }
 
-        return result;
+        cb(std::move(result));
     }
 
     nl::json interpreter::complete_request_impl(

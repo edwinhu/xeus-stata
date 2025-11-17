@@ -24,13 +24,12 @@ namespace xeus_stata
     private:
         void configure_impl() override;
 
-        nl::json execute_request_impl(
+        void execute_request_impl(
+            xeus::xinterpreter::send_reply_callback cb,
             int execution_counter,
             const std::string& code,
-            bool silent,
-            bool store_history,
-            nl::json user_expressions,
-            bool allow_stdin
+            xeus::execute_request_config config,
+            nl::json user_expressions
         ) override;
 
         nl::json complete_request_impl(

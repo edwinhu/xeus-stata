@@ -68,6 +68,23 @@ namespace xeus_stata
         // Strip ANSI codes first
         std::string cleaned = strip_ansi_codes(output);
 
+        // Remove execution markers
+        std::regex marker_pattern("__MARKER__[a-f0-9]+__");
+        cleaned = std::regex_replace(cleaned, marker_pattern, "");
+
+        // Remove Stata prompts and command echo
+        // Pattern: ". <command>" at the start of lines
+        std::regex prompt_pattern("^\\. .*$", std::regex_constants::multiline);
+        cleaned = std::regex_replace(cleaned, prompt_pattern, "");
+
+        // Remove incomplete display statements (from marker command)
+        std::regex display_pattern("^\\. display \".*$", std::regex_constants::multiline);
+        cleaned = std::regex_replace(cleaned, display_pattern, "");
+
+        // Remove standalone quote marks (artifacts from marker command)
+        std::regex quote_pattern("^\"\\s*$", std::regex_constants::multiline);
+        cleaned = std::regex_replace(cleaned, quote_pattern, "");
+
         // Check for errors
         int error_code = 0;
         result.is_error = contains_error(cleaned, error_code);
@@ -95,12 +112,33 @@ namespace xeus_stata
         result.graph_files = extract_graph_files(cleaned);
 
         // Store cleaned output
-        // Remove the command echo if present (Stata echoes commands)
         result.output = cleaned;
 
-        // Trim trailing/leading whitespace
-        result.output.erase(0, result.output.find_first_not_of(" \t\n\r"));
-        result.output.erase(result.output.find_last_not_of(" \t\n\r") + 1);
+        // Remove empty lines and trim
+        std::stringstream ss(result.output);
+        std::stringstream output_ss;
+        std::string line;
+        bool first_line = true;
+
+        while (std::getline(ss, line))
+        {
+            // Trim line
+            line.erase(0, line.find_first_not_of(" \t\r"));
+            line.erase(line.find_last_not_of(" \t\r") + 1);
+
+            // Skip empty lines
+            if (!line.empty())
+            {
+                if (!first_line)
+                {
+                    output_ss << "\n";
+                }
+                output_ss << line;
+                first_line = false;
+            }
+        }
+
+        result.output = output_ss.str();
 
         return result;
     }

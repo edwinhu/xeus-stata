@@ -8,7 +8,7 @@
 #include <cstring>
 #include <stdexcept>
 
-#ifdef XEUS_STATA_PLATFORM_LINUX || XEUS_STATA_PLATFORM_MACOS
+#if defined(XEUS_STATA_PLATFORM_LINUX) || defined(XEUS_STATA_PLATFORM_MACOS)
     #include <unistd.h>
     #include <fcntl.h>
     #include <sys/types.h>
@@ -57,7 +57,7 @@ namespace xeus_stata
 
         void start_stata()
         {
-#ifdef XEUS_STATA_PLATFORM_LINUX || XEUS_STATA_PLATFORM_MACOS
+#if defined(XEUS_STATA_PLATFORM_LINUX) || defined(XEUS_STATA_PLATFORM_MACOS)
             char slave_name[256];
             int slave_fd;
 
@@ -166,7 +166,7 @@ namespace xeus_stata
         {
             if (m_pid > 0)
             {
-#ifdef XEUS_STATA_PLATFORM_LINUX || XEUS_STATA_PLATFORM_MACOS
+#if defined(XEUS_STATA_PLATFORM_LINUX) || defined(XEUS_STATA_PLATFORM_MACOS)
                 // Send exit command
                 write_command("exit, clear");
 
@@ -204,7 +204,7 @@ namespace xeus_stata
 
         void interrupt()
         {
-#ifdef XEUS_STATA_PLATFORM_LINUX || XEUS_STATA_PLATFORM_MACOS
+#if defined(XEUS_STATA_PLATFORM_LINUX) || defined(XEUS_STATA_PLATFORM_MACOS)
             if (m_pid > 0)
             {
                 kill(m_pid, SIGINT);
@@ -225,7 +225,7 @@ namespace xeus_stata
     private:
         void write_command(const std::string& command)
         {
-#ifdef XEUS_STATA_PLATFORM_LINUX || XEUS_STATA_PLATFORM_MACOS
+#if defined(XEUS_STATA_PLATFORM_LINUX) || defined(XEUS_STATA_PLATFORM_MACOS)
             std::string cmd = command + "\n";
             ssize_t written = write(m_master_fd, cmd.c_str(), cmd.length());
             if (written != static_cast<ssize_t>(cmd.length()))
@@ -242,7 +242,7 @@ namespace xeus_stata
 
         std::string read_until_marker(const std::string& marker, int timeout_ms)
         {
-#ifdef XEUS_STATA_PLATFORM_LINUX || XEUS_STATA_PLATFORM_MACOS
+#if defined(XEUS_STATA_PLATFORM_LINUX) || defined(XEUS_STATA_PLATFORM_MACOS)
             std::string output;
             char buffer[4096];
 

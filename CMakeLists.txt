@@ -62,6 +62,13 @@ set(XEUS_STATA_HEADERS
 # Executable
 add_executable(xstata ${XEUS_STATA_SRC} ${XEUS_STATA_HEADERS})
 
+# Platform-specific libraries for PTY support
+if(UNIX AND NOT APPLE)
+    set(PLATFORM_LIBS util)
+elseif(APPLE)
+    set(PLATFORM_LIBS util)
+endif()
+
 # Link libraries
 target_link_libraries(xstata
     PRIVATE
@@ -69,6 +76,7 @@ target_link_libraries(xstata
         xeus-zmq
         nlohmann_json::nlohmann_json
         Threads::Threads
+        ${PLATFORM_LIBS}
 )
 
 # Include directories
