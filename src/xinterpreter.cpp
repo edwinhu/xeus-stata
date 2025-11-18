@@ -25,6 +25,14 @@ namespace xeus_stata
     {
     }
 
+    void interpreter::interrupt()
+    {
+        if (m_session)
+        {
+            m_session->interrupt();
+        }
+    }
+
     void interpreter::configure_impl()
     {
         // Initialize Stata session

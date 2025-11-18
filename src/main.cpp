@@ -1,5 +1,6 @@
 #include <iostream>
 #include <memory>
+#include <signal.h>
 
 #include "xeus/xkernel.hpp"
 #include "xeus/xkernel_configuration.hpp"
@@ -8,6 +9,23 @@
 
 #include "xeus-stata/xinterpreter.hpp"
 #include "xeus-stata/xeus_stata_config.hpp"
+
+namespace {
+    // Global pointer to interpreter for signal handler access
+    // Note: Using raw pointer because signal handlers cannot capture std::unique_ptr
+    xeus_stata::interpreter* g_interpreter = nullptr;
+
+    // Signal handler for SIGINT (Ctrl+C)
+    void sigint_handler(int signum)
+    {
+        // Forward interrupt to interpreter
+        if (g_interpreter != nullptr)
+        {
+            g_interpreter->interrupt();
+        }
+        // Note: Don't restore default handler - we want to keep catching signals
+    }
+}
 
 int main(int argc, char* argv[])
 {
@@ -62,6 +80,21 @@ int main(int argc, char* argv[])
         // Create interpreter
         auto interpreter = std::make_unique<xeus_stata::interpreter>();
 
+        // Store raw pointer for signal handler (before moving into kernel)
+        g_interpreter = interpreter.get();
+
+        // Install SIGINT handler
+        // Use sigaction instead of signal for better portability
+        struct sigaction sa;
+        sa.sa_handler = sigint_handler;
+        sigemptyset(&sa.sa_mask);
+        sa.sa_flags = 0;  // No special flags needed
+        if (sigaction(SIGINT, &sa, nullptr) == -1)
+        {
+            std::cerr << "Warning: Failed to install SIGINT handler" << std::endl;
+            // Continue anyway - not a fatal error
+        }
+
         // Create context
         auto context = xeus::make_zmq_context();
 
@@ -80,9 +113,13 @@ int main(int argc, char* argv[])
         std::cout << "(set STATA_PATH environment variable to override)" << std::endl;
 
         kernel.start();
+
+        // Clean up global reference
+        g_interpreter = nullptr;
     }
     catch (const std::exception& e)
     {
+        g_interpreter = nullptr;  // Clean up on error
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }

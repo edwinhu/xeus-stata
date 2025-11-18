@@ -324,6 +324,26 @@ namespace xeus_stata
                             output = output.substr(0, pos);
                             break;
                         }
+
+                        // Check if Stata was interrupted (--Break-- message)
+                        if (output.find("--Break--") != std::string::npos)
+                        {
+                            // Continue reading briefly to consume the prompt that comes after --Break--
+                            // This ensures the session is in a clean state for the next command
+                            usleep(100000); // Wait 100ms for prompt
+
+                            // Read any remaining output (the prompt)
+                            ssize_t n = read(m_master_fd, buffer, sizeof(buffer) - 1);
+                            if (n > 0)
+                            {
+                                buffer[n] = '\0';
+                                output += buffer;
+                            }
+
+                            // Just return the --Break-- message
+                            output = "--Break--";
+                            break;
+                        }
                     }
                 }
 

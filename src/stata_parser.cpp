@@ -189,6 +189,9 @@ namespace xeus_stata
         // Strip ANSI codes first
         std::string cleaned = strip_ansi_codes(output);
 
+        // Check for interrupted execution (--Break--)
+        bool was_interrupted = (cleaned.find("--Break--") != std::string::npos);
+
         // Remove execution markers
         std::regex marker_pattern("__MARKER__[a-f0-9]+__");
         cleaned = std::regex_replace(cleaned, marker_pattern, "");
@@ -237,6 +240,13 @@ namespace xeus_stata
             {
                 result.error_message = cleaned;
             }
+        }
+        else if (was_interrupted)
+        {
+            // Mark as error for interrupted execution
+            result.is_error = true;
+            result.error_code = 1;  // r(1) is the standard Stata code for user break
+            result.error_message = "Execution interrupted by user";
         }
 
         // Extract graph files

@@ -21,6 +21,9 @@ namespace xeus_stata
         interpreter();
         virtual ~interpreter();
 
+        // Interrupt current execution
+        void interrupt();
+
     private:
         void configure_impl() override;
 
