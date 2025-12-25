@@ -1,4 +1,4 @@
-[project]
+[workspace]
 name = "xeus-stata"
 version = "0.1.0"
 description = "A Jupyter kernel for Stata based on the xeus framework"

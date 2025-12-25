@@ -28,6 +28,12 @@ namespace xeus_stata
     // Format output as HTML table
     std::string format_as_html_table(const std::string& output);
 
+    // Check if output contains raw HTML (e.g., from esttab, html)
+    bool is_raw_html_output(const std::string& output);
+
+    // Format raw HTML output (no escaping, just wrap in container)
+    std::string format_as_raw_html(const std::string& output);
+
 } // namespace xeus_stata
 
 #endif // XEUS_STATA_PARSER_HPP

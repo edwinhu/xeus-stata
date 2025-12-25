@@ -182,6 +182,91 @@ namespace xeus_stata
         return html.str();
     }
 
+    bool is_raw_html_output(const std::string& output)
+    {
+        if (output.empty())
+        {
+            return false;
+        }
+
+        // Check for HTML table tags (from esttab, etc.)
+        // These indicate raw HTML that should not be escaped
+        std::vector<std::string> html_indicators = {
+            "<table",
+            "<TABLE",
+            "<tr>",
+            "<TR>",
+            "<div",
+            "<DIV",
+            "<html",
+            "<HTML",
+            "<body",
+            "<BODY",
+            "<span",
+            "<SPAN"
+        };
+
+        for (const auto& indicator : html_indicators)
+        {
+            if (output.find(indicator) != std::string::npos)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    std::string format_as_raw_html(const std::string& output)
+    {
+        // Extract just the HTML portion from the output
+        // esttab output may contain non-HTML lines before the table
+        std::stringstream result;
+
+        // Find the start of HTML content
+        size_t html_start = std::string::npos;
+        std::vector<std::string> html_starts = {"<table", "<TABLE", "<div", "<DIV", "<tr>", "<TR>"};
+
+        for (const auto& start : html_starts)
+        {
+            size_t pos = output.find(start);
+            if (pos != std::string::npos && (html_start == std::string::npos || pos < html_start))
+            {
+                html_start = pos;
+            }
+        }
+
+        if (html_start != std::string::npos)
+        {
+            std::string html_content = output.substr(html_start);
+
+            // Check if this is a fragment (starts with <tr> but no <table>)
+            bool is_fragment = (html_content.find("<tr>") != std::string::npos ||
+                               html_content.find("<TR>") != std::string::npos) &&
+                              (html_content.find("<table") == std::string::npos &&
+                               html_content.find("<TABLE") == std::string::npos);
+
+            if (is_fragment)
+            {
+                // Wrap in table tags
+                result << "<table>\n";
+                result << html_content;
+                result << "\n</table>";
+            }
+            else
+            {
+                result << html_content;
+            }
+        }
+        else
+        {
+            // No HTML found, return as-is (shouldn't happen if is_raw_html_output is true)
+            result << output;
+        }
+
+        return result.str();
+    }
+
     execution_result parse_execution_output(const std::string& output)
     {
         execution_result result;

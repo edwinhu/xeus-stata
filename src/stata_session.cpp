@@ -22,6 +22,7 @@
         #include <util.h>
     #else
         #include <pty.h>
+        #include <sys/prctl.h>
     #endif
 #endif
 
@@ -85,6 +86,11 @@ namespace xeus_stata
             {
                 // Child process
                 close(m_master_fd);
+
+#if defined(__linux__)
+                // Ensure child is killed when parent dies
+                prctl(PR_SET_PDEATHSIG, SIGTERM);
+#endif
 
                 // Redirect stdin, stdout, stderr to slave PTY
                 dup2(slave_fd, STDIN_FILENO);

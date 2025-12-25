@@ -103,14 +103,28 @@ namespace xeus_stata
                 result["payload"] = nl::json::array();
                 result["user_expressions"] = nl::json::object();
 
-                // Publish output with rich HTML table formatting
+                // Publish output with rich HTML formatting
                 if (!config.silent && !exec_result.output.empty())
                 {
-                    // Check if output looks like a table
-                    if (is_stata_table(exec_result.output))
+                    nl::json display_data;
+
+                    // Priority 1: Check if output contains raw HTML (from esttab, etc.)
+                    if (is_raw_html_output(exec_result.output))
                     {
-                        // Create MIME bundle with both text/plain and text/html
-                        nl::json display_data;
+                        // Raw HTML - render without escaping
+                        display_data["text/html"] = format_as_raw_html(exec_result.output);
+                        display_data["text/plain"] = exec_result.output;
+
+                        publish_execution_result(
+                            execution_counter,
+                            std::move(display_data),
+                            nl::json::object()
+                        );
+                    }
+                    // Priority 2: Check if output looks like a Stata table
+                    else if (is_stata_table(exec_result.output))
+                    {
+                        // Stata table - escape HTML and wrap in styled <pre>
                         display_data["text/plain"] = exec_result.output;
                         display_data["text/html"] = format_as_html_table(exec_result.output);
 
