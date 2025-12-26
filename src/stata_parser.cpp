@@ -140,10 +140,12 @@ namespace xeus_stata
         html << "  font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, 'DejaVu Sans Mono', Consolas, monospace;\n";
         html << "  font-size: 12px;\n";
         html << "  font-variant-ligatures: none;\n";
-        html << "  background-color: #f8f8f8;\n";
+        html << "  color: inherit;\n";
+        html << "  background-color: transparent;\n";
         html << "  padding: 10px;\n";
-        html << "  border: 1px solid #e0e0e0;\n";
+        html << "  border: 1px solid currentcolor;\n";
         html << "  border-radius: 3px;\n";
+        html << "  opacity: 0.6;\n";
         html << "  overflow-x: auto;\n";
         html << "  margin: 0;\n";
         html << "  line-height: 1.4;\n";
