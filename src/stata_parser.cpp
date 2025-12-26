@@ -225,6 +225,54 @@ namespace xeus_stata
         // esttab output may contain non-HTML lines before the table
         std::stringstream result;
 
+        // Inject booktabs-style CSS for tables
+        result << "<style>\n";
+        result << ".stata-table, .stata-table table {\n";
+        result << "  border-collapse: collapse;\n";
+        result << "  border: none;\n";
+        result << "  font-family: inherit;\n";
+        result << "}\n";
+        result << ".stata-table td, .stata-table th {\n";
+        result << "  border: none;\n";
+        result << "  padding: 4px 8px;\n";
+        result << "}\n";
+        result << "/* Toprule: first row of table */\n";
+        result << ".stata-table > tr:first-child td,\n";
+        result << ".stata-table > tr:first-child th,\n";
+        result << ".stata-table > tbody > tr:first-child td,\n";
+        result << ".stata-table > tbody > tr:first-child th,\n";
+        result << ".stata-table thead tr:first-child th,\n";
+        result << ".stata-table thead tr:first-child td {\n";
+        result << "  border-top: 2px solid currentcolor;\n";
+        result << "}\n";
+        result << "/* Midrule: bottom of thead, or use heuristic for first 3 rows */\n";
+        result << ".stata-table thead tr:last-child th,\n";
+        result << ".stata-table thead tr:last-child td {\n";
+        result << "  border-bottom: 1px solid currentcolor;\n";
+        result << "}\n";
+        result << "/* Heuristic midrule for tables without proper thead: row 3 */\n";
+        result << ".stata-table:not(:has(thead)) > tr:nth-child(3) td,\n";
+        result << ".stata-table:not(:has(thead)) > tbody > tr:nth-child(3) td {\n";
+        result << "  border-bottom: 1px solid currentcolor;\n";
+        result << "}\n";
+        result << "/* Bold headers: thead rows or first 3 rows */\n";
+        result << ".stata-table thead td,\n";
+        result << ".stata-table thead th {\n";
+        result << "  font-weight: bold;\n";
+        result << "}\n";
+        result << ".stata-table:not(:has(thead)) > tr:nth-child(-n+3) td,\n";
+        result << ".stata-table:not(:has(thead)) > tbody > tr:nth-child(-n+3) td {\n";
+        result << "  font-weight: bold;\n";
+        result << "}\n";
+        result << "/* Bottomrule: last row */\n";
+        result << ".stata-table > tr:last-child td,\n";
+        result << ".stata-table > tr:last-child th,\n";
+        result << ".stata-table tbody tr:last-child td,\n";
+        result << ".stata-table tbody tr:last-child th {\n";
+        result << "  border-bottom: 2px solid currentcolor;\n";
+        result << "}\n";
+        result << "</style>\n";
+
         // Find the start of HTML content
         size_t html_start = std::string::npos;
         std::vector<std::string> html_starts = {"<table", "<TABLE", "<div", "<DIV", "<tr>", "<TR>"};
@@ -242,22 +290,75 @@ namespace xeus_stata
         {
             std::string html_content = output.substr(html_start);
 
-            // Check if this is a fragment (starts with <tr> but no <table>)
-            bool is_fragment = (html_content.find("<tr>") != std::string::npos ||
-                               html_content.find("<TR>") != std::string::npos) &&
+            // Fix malformed esttab semantic output: </thead> without <thead>
+            // esttab fragment+semantic outputs rows then </thead><tbody> without opening <thead>
+            size_t thead_close = html_content.find("</thead>");
+            size_t thead_open = html_content.find("<thead>");
+            if (thead_close != std::string::npos &&
+                (thead_open == std::string::npos || thead_open > thead_close))
+            {
+                // Find the first <tr> and insert <thead> before it
+                size_t first_tr = html_content.find("<tr>");
+                if (first_tr == std::string::npos)
+                {
+                    first_tr = html_content.find("<TR>");
+                }
+                if (first_tr != std::string::npos && first_tr < thead_close)
+                {
+                    html_content.insert(first_tr, "<thead>\n");
+                }
+            }
+
+            // Check if this is a fragment (starts with <tr> or <thead> but no <table>)
+            bool is_fragment = ((html_content.find("<tr>") != std::string::npos ||
+                                html_content.find("<TR>") != std::string::npos ||
+                                html_content.find("<thead>") != std::string::npos) &&
                               (html_content.find("<table") == std::string::npos &&
-                               html_content.find("<TABLE") == std::string::npos);
+                               html_content.find("<TABLE") == std::string::npos));
 
             if (is_fragment)
             {
-                // Wrap in table tags
-                result << "<table>\n";
+                // Wrap in table tags with stata-table class
+                result << "<table class=\"stata-table\">\n";
                 result << html_content;
                 result << "\n</table>";
             }
             else
             {
-                result << html_content;
+                // Add stata-table class to existing table
+                // Replace <table with <table class="stata-table"
+                std::string modified = html_content;
+                size_t table_pos = modified.find("<table");
+                if (table_pos == std::string::npos)
+                {
+                    table_pos = modified.find("<TABLE");
+                }
+                if (table_pos != std::string::npos)
+                {
+                    // Find the end of the table tag
+                    size_t tag_end = modified.find(">", table_pos);
+                    if (tag_end != std::string::npos)
+                    {
+                        // Check if there's already a class attribute
+                        std::string tag = modified.substr(table_pos, tag_end - table_pos);
+                        if (tag.find("class=") != std::string::npos)
+                        {
+                            // Add to existing class
+                            size_t class_pos = tag.find("class=\"");
+                            if (class_pos != std::string::npos)
+                            {
+                                size_t insert_pos = table_pos + class_pos + 7;
+                                modified.insert(insert_pos, "stata-table ");
+                            }
+                        }
+                        else
+                        {
+                            // Add class attribute
+                            modified.insert(tag_end, " class=\"stata-table\"");
+                        }
+                    }
+                }
+                result << modified;
             }
         }
         else
